@@ -52,10 +52,6 @@ public class DiaryService {
         return diaryRepository.findAllByDate(date);
     }
 
-    public List<Diary> readDiaries(LocalDate startDate, LocalDate endDate) {
-        return diaryRepository.findAllByDateBetweenOrderByDateDesc(startDate, endDate);
-    }
-
     public void updateDiary(LocalDate date, String text) {
         Diary nowDiary = diaryRepository.getFirstByDate(date);
         nowDiary.setText(text);
@@ -64,6 +60,10 @@ public class DiaryService {
 
     public void deleteDiary(LocalDate date) {
         diaryRepository.deleteAllByDate(date);
+    }
+
+    public List<Diary> readDiaries(LocalDate startDate, LocalDate endDate) {
+        return diaryRepository.findAllByDateBetweenOrderByDateDesc(startDate, endDate);
     }
 
     private String getWeatherString() {
