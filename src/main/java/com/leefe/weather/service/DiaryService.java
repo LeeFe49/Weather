@@ -1,11 +1,14 @@
 package com.leefe.weather.service;
 
+import com.leefe.weather.WeatherApplication;
 import com.leefe.weather.domain.Diary;
 import com.leefe.weather.repository.DiaryRepository;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +33,10 @@ public class DiaryService {
         this.diaryRepository = diaryRepository;
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(WeatherApplication.class);
+
     public void createDiary(LocalDate date, String text) {
+        logger.info("started to create diary");
         // open weather map에서 날씨 데이터 가져오기
         String weatherData = getWeatherString();
 
@@ -46,9 +52,11 @@ public class DiaryService {
         nowDiary.setDate(date);
 
         diaryRepository.save(nowDiary);
+        logger.info("end to create diary");
     }
 
     public List<Diary> readDiary(LocalDate date) {
+        logger.debug("read diary");
         return diaryRepository.findAllByDate(date);
     }
 
