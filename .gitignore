@@ -36,3 +36,5 @@ out/
 ### VS Code ###
 .vscode/
 logs
+
+history.city.list.json
