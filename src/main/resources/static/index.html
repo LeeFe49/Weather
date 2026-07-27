@@ -67,10 +67,25 @@
             </div>
 
             <div class="modal-body">
-                <label class="field">
+                <div class="field">
                     <span class="label-text">날짜</span>
-                    <input type="date" id="diaryDate" required>
-                </label>
+                    <div class="calendar" id="diaryCalendar">
+                        <div class="calendar-header">
+                            <button type="button" class="btn-icon calendar-nav" id="btnCalPrev" aria-label="이전 달">&lsaquo;</button>
+                            <span class="calendar-title" id="calTitle"></span>
+                            <button type="button" class="btn-icon calendar-nav" id="btnCalNext" aria-label="다음 달">&rsaquo;</button>
+                        </div>
+                        <div class="calendar-weekdays" aria-hidden="true">
+                            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid"></div>
+                        <p class="calendar-legend">
+                            <span class="legend-dot"></span>
+                            일기가 있는 날
+                        </p>
+                    </div>
+                    <input type="hidden" id="diaryDate" required>
+                </div>
                 <label class="field">
                     <span class="label-text">일기</span>
                     <textarea id="diaryText" rows="6" placeholder="오늘 하루는 어땠나요?" required></textarea>

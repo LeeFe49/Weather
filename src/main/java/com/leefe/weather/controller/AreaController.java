@@ -18,8 +18,8 @@ public class AreaController {
     }
 
     @PostMapping("/create/area")
-    void createArea(@RequestParam String area, @RequestParam Double lat, @RequestParam Double lon) {
-        areaService.createArea(area, lat, lon);
+    Area createArea(@RequestParam String findArea, @RequestParam String saveArea) {
+        return areaService.createArea(findArea, saveArea);
     }
 
     @GetMapping("/read/areas")
@@ -41,4 +41,5 @@ public class AreaController {
     Area findArea(@RequestParam String area) {
         return areaService.findArea(area);
     }
+
 }

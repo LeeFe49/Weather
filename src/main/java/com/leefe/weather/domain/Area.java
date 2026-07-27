@@ -20,9 +20,8 @@ public class Area {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String area;
+    private String name;
     private double lat;
     private double lon;
 
-    public Area(String area, Double lat, Double lon) {
-    }
 }

@@ -10,8 +10,18 @@ const diaryDateInput = document.getElementById("diaryDate");
 const diaryTextInput = document.getElementById("diaryText");
 const formNote = document.getElementById("formNote");
 const btnDelete = document.getElementById("btnDelete");
+const calTitle = document.getElementById("calTitle");
+const calendarGrid = document.getElementById("calendarGrid");
+const btnCalPrev = document.getElementById("btnCalPrev");
+const btnCalNext = document.getElementById("btnCalNext");
 
 let editingDate = null;
+let calendarView = { year: 0, month: 0 };
+let diaryDatesInMonth = new Set();
+
+function getTodayString() {
+    return formatDate(new Date());
+}
 
 function formatDate(date) {
     const y = date.getFullYear();
@@ -34,11 +44,142 @@ function kelvinToCelsius(kelvin) {
     return (kelvin - 273.15).toFixed(1);
 }
 
+function setMaxDateOnInputs() {
+    const today = getTodayString();
+    startDateInput.max = today;
+    endDateInput.max = today;
+}
+
+function parseDateString(dateStr) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(y, m - 1, d);
+}
+
+function isFutureMonth(year, month) {
+    const today = new Date();
+    return year > today.getFullYear()
+        || (year === today.getFullYear() && month > today.getMonth());
+}
+
+function canGoToNextMonth() {
+    let { year, month } = calendarView;
+    month += 1;
+    if (month > 11) {
+        month = 0;
+        year += 1;
+    }
+    return !isFutureMonth(year, month);
+}
+
+async function refreshCalendarDiaries() {
+    const { year, month } = calendarView;
+    const today = getTodayString();
+    const start = formatDate(new Date(year, month, 1));
+
+    if (start > today) {
+        diaryDatesInMonth = new Set();
+        return;
+    }
+
+    const monthEnd = formatDate(new Date(year, month + 1, 0));
+    const end = monthEnd > today ? today : monthEnd;
+    const diaries = await fetchDiaries(start, end);
+    diaryDatesInMonth = new Set(diaries.map((diary) => diary.date));
+}
+
+function renderCalendar() {
+    const { year, month } = calendarView;
+    calTitle.textContent = `${year}년 ${month + 1}월`;
+    btnCalNext.disabled = !canGoToNextMonth();
+
+    calendarGrid.innerHTML = "";
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = getTodayString();
+    const selected = diaryDateInput.value;
+
+    for (let i = 0; i < firstDay; i++) {
+        calendarGrid.appendChild(document.createElement("span"));
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = formatDate(new Date(year, month, day));
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "calendar-day";
+        button.textContent = day;
+        button.dataset.date = dateStr;
+
+        if (dateStr > todayStr) {
+            button.classList.add("disabled");
+            button.disabled = true;
+        }
+        if (dateStr === todayStr) {
+            button.classList.add("today");
+        }
+        if (dateStr === selected) {
+            button.classList.add("selected");
+        }
+        if (diaryDatesInMonth.has(dateStr)) {
+            button.classList.add("has-diary");
+        }
+
+        button.addEventListener("click", () => selectCalendarDate(dateStr));
+        calendarGrid.appendChild(button);
+    }
+}
+
+async function showCalendarForDate(dateStr) {
+    const date = parseDateString(dateStr);
+    calendarView = { year: date.getFullYear(), month: date.getMonth() };
+    await refreshCalendarDiaries();
+    renderCalendar();
+}
+
+async function selectCalendarDate(dateStr) {
+    if (dateStr > getTodayString()) {
+        return;
+    }
+
+    diaryDateInput.value = dateStr;
+    renderCalendar();
+    await loadDiaryForSelectedDate();
+}
+
+async function changeCalendarMonth(offset) {
+    let { year, month } = calendarView;
+    month += offset;
+
+    if (month < 0) {
+        month = 11;
+        year -= 1;
+    } else if (month > 11) {
+        month = 0;
+        year += 1;
+    }
+
+    if (isFutureMonth(year, month)) {
+        return;
+    }
+
+    calendarView = { year, month };
+    await refreshCalendarDiaries();
+    renderCalendar();
+}
+
+function clampToToday(input) {
+    const today = getTodayString();
+    if (input.value > today) {
+        input.value = today;
+    }
+}
+
 function setDefaultDateRange() {
     const today = new Date();
     const start = new Date(today.getFullYear(), today.getMonth(), 1);
     startDateInput.value = formatDate(start);
-    endDateInput.value = formatDate(today);
+    endDateInput.value = getTodayString();
+    setMaxDateOnInputs();
 }
 
 function showLoading(show) {
@@ -139,36 +280,50 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function openCreateModal() {
-    editingDate = null;
-    modalTitle.textContent = "새 일기";
-    diaryDateInput.value = formatDate(new Date());
-    diaryDateInput.disabled = false;
-    diaryTextInput.value = "";
-    formNote.classList.remove("hidden");
-    btnDelete.classList.add("hidden");
-    diaryModal.showModal();
-}
+async function loadDiaryForSelectedDate() {
+    const date = diaryDateInput.value;
+    if (!date) {
+        return;
+    }
 
-async function openEditModal(date) {
+    if (date > getTodayString()) {
+        diaryDateInput.value = getTodayString();
+        renderCalendar();
+    }
+
     try {
-        const diaries = await fetchDiary(date);
-        if (diaries.length === 0) {
-            return;
+        const diaries = await fetchDiary(diaryDateInput.value);
+        if (diaries.length > 0) {
+            editingDate = diaryDateInput.value;
+            modalTitle.textContent = "일기 수정";
+            diaryTextInput.value = diaries[0].text;
+            formNote.classList.add("hidden");
+            btnDelete.classList.remove("hidden");
+        } else {
+            editingDate = null;
+            modalTitle.textContent = "새 일기";
+            diaryTextInput.value = "";
+            formNote.classList.remove("hidden");
+            btnDelete.classList.add("hidden");
         }
-
-        const diary = diaries[0];
-        editingDate = date;
-        modalTitle.textContent = "일기 수정";
-        diaryDateInput.value = date;
-        diaryDateInput.disabled = true;
-        diaryTextInput.value = diary.text;
-        formNote.classList.add("hidden");
-        btnDelete.classList.remove("hidden");
-        diaryModal.showModal();
     } catch (error) {
         alert(error.message);
     }
+}
+
+async function openModal(date) {
+    diaryDateInput.value = date || getTodayString();
+    diaryModal.showModal();
+    await showCalendarForDate(diaryDateInput.value);
+    await loadDiaryForSelectedDate();
+}
+
+function openCreateModal() {
+    openModal(getTodayString());
+}
+
+function openEditModal(date) {
+    openModal(date);
 }
 
 function closeModal() {
@@ -196,7 +351,7 @@ diaryForm.addEventListener("submit", async (event) => {
 
     const date = diaryDateInput.value;
     const text = diaryTextInput.value.trim();
-    if (!text) {
+    if (!text || date > getTodayString()) {
         return;
     }
 
@@ -232,6 +387,10 @@ document.getElementById("btnEmptyNew").addEventListener("click", openCreateModal
 document.getElementById("btnSearch").addEventListener("click", loadDiaries);
 document.getElementById("btnCloseModal").addEventListener("click", closeModal);
 document.getElementById("btnCancel").addEventListener("click", closeModal);
+btnCalPrev.addEventListener("click", () => changeCalendarMonth(-1));
+btnCalNext.addEventListener("click", () => changeCalendarMonth(1));
+startDateInput.addEventListener("change", () => clampToToday(startDateInput));
+endDateInput.addEventListener("change", () => clampToToday(endDateInput));
 
 setDefaultDateRange();
 loadDiaries();

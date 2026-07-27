@@ -24,12 +24,20 @@ public class AreaService {
         this.areaRepository = areaRepository;
     }
 
-    public void createArea(String area, Double lat, Double lon) {
+    public Area createArea(String findAreaString, String saveAreaString) {
         Area newArea = new Area();
-        newArea.setArea(area);
-        newArea.setLat(lat);
-        newArea.setLon(lon);
-        areaRepository.save(newArea);
+        Area dbArea = new Area();
+        dbArea = areaRepository.getAreaByArea(saveAreaString);
+
+        newArea = findArea(findAreaString);
+
+        dbArea.setLon(newArea.getLon());
+        dbArea.setLat(newArea.getLat());
+        dbArea.setName(findAreaString);
+
+        areaRepository.save(dbArea);
+
+        return dbArea;
     }
 
     public List<Area> readAreas() {
