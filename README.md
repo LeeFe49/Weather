@@ -18,9 +18,7 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 - **Build**: Gradle
 
 ### 🖥️ 서버 환경
-- Tomcat 10.0.x
-- JSP 3.0
-- Servlet 5.0
+- oracle cloud server
 - JDK 17
 - MariaDB 10.1.x UTF-8
 
