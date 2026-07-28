@@ -53,3 +53,4 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 - 소셜 로그인
 서버셋팅 출처: https://vennycode.tistory.com/54
 https://korea-potato.tistory.com/39#google_vignette
+https://newstroyblog.tistory.com/652
