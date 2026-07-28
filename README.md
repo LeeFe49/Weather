@@ -51,4 +51,4 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 - Spring Security
 - 기본 로그인
 - 소셜 로그인
-출처: https://vennycode.tistory.com/54 [베니코드:티스토리]
+서버셋팅 출처: https://vennycode.tistory.com/54
