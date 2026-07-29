@@ -1,9 +1,6 @@
 package com.leefe.weather.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,11 +14,11 @@ import java.time.LocalDate;
 public class Area {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String area;
     private String name;
-    private double lat;
-    private double lon;
+    private Double lat;
+    private Double lon;
 
+    @Column
+    private String text = "";
 }
