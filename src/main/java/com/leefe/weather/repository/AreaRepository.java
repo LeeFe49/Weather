@@ -13,5 +13,7 @@ public interface AreaRepository extends JpaRepository<Area, Integer> {
 
     List<Area> findAllByTextIsNotNull();
 
+    List<Area> findByTextNot(String text);
+
     List<Area> findByNameContaining(String name);
 }

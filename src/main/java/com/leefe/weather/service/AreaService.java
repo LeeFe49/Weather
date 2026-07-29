@@ -77,7 +77,7 @@ public class AreaService {
     }
 
     public List<Area> readAreasUpdated() {
-        return areaRepository.findAllByTextIsNotNull();
+        return areaRepository.findByTextNot("");
     }
 
     public List<Area> readAreasLike(String name) {

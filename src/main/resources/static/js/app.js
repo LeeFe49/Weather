@@ -14,10 +14,16 @@ const calTitle = document.getElementById("calTitle");
 const calendarGrid = document.getElementById("calendarGrid");
 const btnCalPrev = document.getElementById("btnCalPrev");
 const btnCalNext = document.getElementById("btnCalNext");
+const diaryAreaSearchInput = document.getElementById("diaryAreaSearch");
+const diaryAreaResults = document.getElementById("diaryAreaResults");
+const diaryAreaSelected = document.getElementById("diaryAreaSelected");
+
+const SELECTED_AREA_KEY = "weather.selectedArea";
 
 let editingDate = null;
 let calendarView = { year: 0, month: 0 };
 let diaryDatesInMonth = new Set();
+let diaryAreaSearchTimer = null;
 
 function getTodayString() {
     return formatDate(new Date());
@@ -42,6 +48,152 @@ function formatDisplayDate(dateStr) {
 
 function kelvinToCelsius(kelvin) {
     return (kelvin - 273.15).toFixed(1);
+}
+
+function formatCoords(lat, lon) {
+    return `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+}
+
+function getSelectedArea() {
+    const raw = localStorage.getItem(SELECTED_AREA_KEY);
+    return raw ? JSON.parse(raw) : null;
+}
+
+function setSelectedArea(area) {
+    if (area) {
+        localStorage.setItem(
+            SELECTED_AREA_KEY,
+            JSON.stringify({
+                id: area.id,
+                name: area.name,
+                lat: area.lat,
+                lon: area.lon,
+                text: area.text || "",
+            }),
+        );
+    } else {
+        localStorage.removeItem(SELECTED_AREA_KEY);
+    }
+    renderDiarySelectedArea();
+    updateFormNote();
+}
+
+function updateFormNote() {
+    if (formNote.classList.contains("hidden")) {
+        return;
+    }
+
+    const area = getSelectedArea();
+    if (area) {
+        formNote.textContent = `${area.name} 지역 날씨가 저장됩니다. (연동 예정 · 현재는 서울 날씨 저장)`;
+    } else {
+        formNote.textContent = "지역을 선택하면 해당 지역 날씨가 저장됩니다. (연동 예정 · 현재는 서울 날씨 저장)";
+    }
+}
+
+function renderDiarySelectedArea() {
+    const area = getSelectedArea();
+
+    if (!area) {
+        diaryAreaSelected.classList.add("hidden");
+        diaryAreaSelected.innerHTML = "";
+        return;
+    }
+
+    diaryAreaSelected.classList.remove("hidden");
+    diaryAreaSelected.innerHTML = `
+        <div class="diary-area-selected-info">
+            <strong>${escapeHtml(area.name)}</strong>
+            ${area.text ? `<span class="diary-area-selected-memo">${escapeHtml(area.text)}</span>` : ""}
+            <span class="diary-area-selected-coords">${formatCoords(area.lat, area.lon)}</span>
+        </div>
+        <button type="button" class="btn-clear-area" id="btnClearDiaryArea">해제</button>
+    `;
+
+    document.getElementById("btnClearDiaryArea").addEventListener("click", () => {
+        setSelectedArea(null);
+        resetDiaryAreaSearch();
+    });
+}
+
+async function searchDiaryAreas(name) {
+    const params = new URLSearchParams({ name });
+    const response = await fetch(`/read/areas/like?${params}`);
+    if (!response.ok) {
+        throw new Error("지역 검색에 실패했습니다.");
+    }
+    return response.json();
+}
+
+function renderDiaryAreaResults(areas) {
+    diaryAreaResults.innerHTML = "";
+
+    if (areas.length === 0) {
+        diaryAreaResults.innerHTML = `<li class="area-search-empty">검색 결과가 없습니다.</li>`;
+        diaryAreaResults.classList.remove("hidden");
+        return;
+    }
+
+    areas.forEach((area) => {
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "area-search-result";
+        button.innerHTML = `
+            <strong>${escapeHtml(area.name)}</strong>
+            <span>${formatCoords(area.lat, area.lon)}${area.text ? ` · ${escapeHtml(area.text)}` : ""}</span>
+        `;
+        button.addEventListener("click", () => {
+            setSelectedArea(area);
+            resetDiaryAreaSearch();
+        });
+        item.appendChild(button);
+        diaryAreaResults.appendChild(item);
+    });
+
+    diaryAreaResults.classList.remove("hidden");
+}
+
+function resetDiaryAreaSearch() {
+    diaryAreaSearchInput.value = "";
+    diaryAreaResults.classList.add("hidden");
+    diaryAreaResults.innerHTML = "";
+}
+
+function initDiaryAreaSearch() {
+    diaryAreaSearchInput.addEventListener("input", () => {
+        clearTimeout(diaryAreaSearchTimer);
+        const query = diaryAreaSearchInput.value.trim();
+
+        if (!query) {
+            resetDiaryAreaSearch();
+            return;
+        }
+
+        diaryAreaSearchTimer = setTimeout(async () => {
+            try {
+                const areas = await searchDiaryAreas(query);
+                renderDiaryAreaResults(areas);
+            } catch (error) {
+                alert(error.message);
+            }
+        }, 300);
+    });
+
+    diaryAreaSearchInput.addEventListener("focus", () => {
+        const query = diaryAreaSearchInput.value.trim();
+        if (query) {
+            searchDiaryAreas(query)
+                .then(renderDiaryAreaResults)
+                .catch((error) => alert(error.message));
+        }
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest(".area-search-box")) {
+            diaryAreaResults.classList.add("hidden");
+        }
+    });
 }
 
 function setMaxDateOnInputs() {
@@ -205,6 +357,7 @@ async function fetchDiary(date) {
 }
 
 async function createDiary(date, text) {
+    // TODO: 일기 API 연동 시 getSelectedArea() 값을 함께 전송
     const params = new URLSearchParams({ date });
     const response = await fetch(`/create/diary?${params}`, {
         method: "POST",
@@ -313,6 +466,9 @@ async function loadDiaryForSelectedDate() {
 
 async function openModal(date) {
     diaryDateInput.value = date || getTodayString();
+    resetDiaryAreaSearch();
+    renderDiarySelectedArea();
+    updateFormNote();
     diaryModal.showModal();
     await showCalendarForDate(diaryDateInput.value);
     await loadDiaryForSelectedDate();
@@ -392,5 +548,6 @@ btnCalNext.addEventListener("click", () => changeCalendarMonth(1));
 startDateInput.addEventListener("change", () => clampToToday(startDateInput));
 endDateInput.addEventListener("change", () => clampToToday(endDateInput));
 
+initDiaryAreaSearch();
 setDefaultDateRange();
 loadDiaries();
