@@ -54,3 +54,9 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 서버셋팅 출처: https://vennycode.tistory.com/54
 https://korea-potato.tistory.com/39#google_vignette
 https://newstroyblog.tistory.com/652
+
+#### 추가기능 (예정)
+- 사용자 계정
+- 실시간 많이 듣는 노래 틀기
+- AI 제목 생성
+- AI 대화형 일기 -> 음성인식
