@@ -11,8 +11,8 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 
 ### ⚙️ 개발 환경
 - **Language** : Java 17
-- **Framework** : Springboot (3.2.5)
-- **Database** : MariaDB
+- **Framework** : Springboot (4.1.0)
+- **Database** : MySQL - TailScale
 - **ORM** : JPA
 - **Frontend**: Thymeleaf
 - **Build**: Gradle
@@ -20,8 +20,6 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 ### 🖥️ 서버 환경
 - oracle cloud server
 - JDK 17
-- MariaDB 10.1.x UTF-8
-
   
 ## ❗️ 시작하기
 이 섹션에서는 프로젝트를 로컬에서 설정하고 실행하는 방법을 설명합니다.
@@ -60,3 +58,5 @@ https://newstroyblog.tistory.com/652
 - 실시간 많이 듣는 노래 틀기
 - AI 제목 생성
 - AI 대화형 일기 -> 음성인식
+- Docker
+- Jenkins
