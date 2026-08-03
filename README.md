@@ -34,7 +34,7 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 
   
 ## 🌐 배포 방법
-#### ROOT.war
+#### .jar
 
   
 ## 📌 주요 기능
