@@ -18,7 +18,7 @@
                 <span class="brand-icon" aria-hidden="true">☁</span>
                 <div>
                     <h1>날씨 일기</h1>
-                    <p class="subtitle">서울의 하늘과 함께 기록하는 하루</p>
+                    <p class="subtitle" id="headerSubtitle">날씨와 함께 기록하는 하루</p>
                 </div>
             </div>
             <button type="button" class="btn btn-primary" id="btnNewDiary">
@@ -41,7 +41,7 @@
                 </label>
                 <button type="button" class="btn btn-secondary" id="btnSearch">조회</button>
             </div>
-            <p class="hint">일기를 저장하면 그날의 서울 날씨가 함께 기록됩니다.</p>
+            <p class="hint">일기를 저장하면 선택한 지역의 날씨가 함께 기록됩니다.</p>
         </section>
 
         <section class="diary-list" id="diaryList" aria-live="polite"></section>
@@ -87,12 +87,12 @@
                     <input type="hidden" id="diaryDate" required>
                 </div>
                 <div class="field">
-                    <span class="label-text">
-                        지역
-                        <span class="badge badge-soon">일기 저장 연동 예정</span>
-                    </span>
+                    <span class="label-text">지역</span>
                     <div class="area-search-box">
-                        <input type="search" id="diaryAreaSearch" placeholder="지역 이름 검색 (예: Seoul, Busan)" autocomplete="off">
+                        <div class="area-search-row">
+                            <input type="text" id="diaryAreaSearch" placeholder="지역 이름 입력 (예: Seoul)" autocomplete="off">
+                            <button type="button" class="btn btn-secondary" id="btnDiaryAreaSearch">검색</button>
+                        </div>
                         <ul class="area-search-results hidden" id="diaryAreaResults"></ul>
                     </div>
                     <div class="diary-area-selected hidden" id="diaryAreaSelected"></div>
@@ -101,7 +101,7 @@
                     <span class="label-text">일기</span>
                     <textarea id="diaryText" rows="6" placeholder="오늘 하루는 어땠나요?" required></textarea>
                 </label>
-                <p class="form-note" id="formNote">지역을 선택하면 해당 지역 날씨가 저장됩니다. (연동 예정 · 현재는 서울 날씨 저장)</p>
+                <p class="form-note" id="formNote">지역을 선택하면 해당 지역의 날씨가 함께 저장됩니다.</p>
             </div>
 
             <div class="modal-footer">

@@ -17,13 +17,15 @@ const btnCalNext = document.getElementById("btnCalNext");
 const diaryAreaSearchInput = document.getElementById("diaryAreaSearch");
 const diaryAreaResults = document.getElementById("diaryAreaResults");
 const diaryAreaSelected = document.getElementById("diaryAreaSelected");
+const btnDiaryAreaSearch = document.getElementById("btnDiaryAreaSearch");
+const headerSubtitle = document.getElementById("headerSubtitle");
 
 const SELECTED_AREA_KEY = "weather.selectedArea";
 
 let editingDate = null;
 let calendarView = { year: 0, month: 0 };
 let diaryDatesInMonth = new Set();
-let diaryAreaSearchTimer = null;
+let areaByIdCache = new Map();
 
 function getTodayString() {
     return formatDate(new Date());
@@ -76,6 +78,14 @@ function setSelectedArea(area) {
     }
     renderDiarySelectedArea();
     updateFormNote();
+    updateHeaderSubtitle();
+}
+
+function updateHeaderSubtitle() {
+    const area = getSelectedArea();
+    headerSubtitle.textContent = area
+        ? `${area.name}의 하늘과 함께 기록하는 하루`
+        : "날씨와 함께 기록하는 하루";
 }
 
 function updateFormNote() {
@@ -84,11 +94,9 @@ function updateFormNote() {
     }
 
     const area = getSelectedArea();
-    if (area) {
-        formNote.textContent = `${area.name} 지역 날씨가 저장됩니다. (연동 예정 · 현재는 서울 날씨 저장)`;
-    } else {
-        formNote.textContent = "지역을 선택하면 해당 지역 날씨가 저장됩니다. (연동 예정 · 현재는 서울 날씨 저장)";
-    }
+    formNote.textContent = area
+        ? `${area.name} 지역의 날씨가 함께 저장됩니다.`
+        : "지역을 선택하면 해당 지역의 날씨가 함께 저장됩니다.";
 }
 
 function renderDiarySelectedArea() {
@@ -114,6 +122,28 @@ function renderDiarySelectedArea() {
         setSelectedArea(null);
         resetDiaryAreaSearch();
     });
+}
+
+async function fetchAllAreas() {
+    const response = await fetch("/read/areas");
+    if (!response.ok) {
+        throw new Error("지역 목록을 불러오지 못했습니다.");
+    }
+    return response.json();
+}
+
+async function ensureAreaCache() {
+    if (areaByIdCache.size > 0) {
+        return;
+    }
+
+    const areas = await fetchAllAreas();
+    areaByIdCache = new Map(areas.map((area) => [area.id, area]));
+}
+
+async function getAreaById(areaId) {
+    await ensureAreaCache();
+    return areaByIdCache.get(areaId) || null;
 }
 
 async function searchDiaryAreas(name) {
@@ -144,7 +174,9 @@ function renderDiaryAreaResults(areas) {
             <span>${formatCoords(area.lat, area.lon)}${area.text ? ` · ${escapeHtml(area.text)}` : ""}</span>
         `;
         button.addEventListener("click", () => {
+            areaByIdCache.set(area.id, area);
             setSelectedArea(area);
+            diaryAreaSearchInput.value = "";
             resetDiaryAreaSearch();
         });
         item.appendChild(button);
@@ -155,37 +187,35 @@ function renderDiaryAreaResults(areas) {
 }
 
 function resetDiaryAreaSearch() {
-    diaryAreaSearchInput.value = "";
     diaryAreaResults.classList.add("hidden");
     diaryAreaResults.innerHTML = "";
 }
 
+async function performDiaryAreaSearch() {
+    const query = diaryAreaSearchInput.value.trim();
+    if (!query) {
+        resetDiaryAreaSearch();
+        return;
+    }
+
+    try {
+        btnDiaryAreaSearch.disabled = true;
+        const areas = await searchDiaryAreas(query);
+        renderDiaryAreaResults(areas);
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btnDiaryAreaSearch.disabled = false;
+    }
+}
+
 function initDiaryAreaSearch() {
-    diaryAreaSearchInput.addEventListener("input", () => {
-        clearTimeout(diaryAreaSearchTimer);
-        const query = diaryAreaSearchInput.value.trim();
+    btnDiaryAreaSearch.addEventListener("click", performDiaryAreaSearch);
 
-        if (!query) {
-            resetDiaryAreaSearch();
-            return;
-        }
-
-        diaryAreaSearchTimer = setTimeout(async () => {
-            try {
-                const areas = await searchDiaryAreas(query);
-                renderDiaryAreaResults(areas);
-            } catch (error) {
-                alert(error.message);
-            }
-        }, 300);
-    });
-
-    diaryAreaSearchInput.addEventListener("focus", () => {
-        const query = diaryAreaSearchInput.value.trim();
-        if (query) {
-            searchDiaryAreas(query)
-                .then(renderDiaryAreaResults)
-                .catch((error) => alert(error.message));
+    diaryAreaSearchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            performDiaryAreaSearch();
         }
     });
 
@@ -356,25 +386,24 @@ async function fetchDiary(date) {
     return response.json();
 }
 
-async function createDiary(date, text) {
-    // TODO: 일기 API 연동 시 getSelectedArea() 값을 함께 전송
+async function createDiary2(date, cityName, text) {
     const params = new URLSearchParams({ date });
-    const response = await fetch(`/create/diary?${params}`, {
+    const response = await fetch(`/create/diary2?${params}`, {
         method: "POST",
-        headers: { "Content-Type": "text/plain;charset=UTF-8" },
-        body: text,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cityName, text }),
     });
     if (!response.ok) {
         throw new Error("일기를 저장하지 못했습니다.");
     }
 }
 
-async function updateDiary(date, text) {
+async function updateDiary2(date, cityName, text) {
     const params = new URLSearchParams({ date });
-    const response = await fetch(`/update/diary?${params}`, {
+    const response = await fetch(`/update/diary2?${params}`, {
         method: "PUT",
-        headers: { "Content-Type": "text/plain;charset=UTF-8" },
-        body: text,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cityName, text }),
     });
     if (!response.ok) {
         throw new Error("일기를 수정하지 못했습니다.");
@@ -407,10 +436,15 @@ function renderDiaries(diaries) {
         const iconUrl = diary.icon
             ? `https://openweathermap.org/img/wn/${diary.icon}@2x.png`
             : "";
+        const area = areaByIdCache.get(diary.areaId);
+        const areaLabel = area ? area.name : "";
 
         card.innerHTML = `
             <div class="diary-card-header">
-                <time class="diary-date" datetime="${diary.date}">${formatDisplayDate(diary.date)}</time>
+                <div class="diary-card-meta">
+                    <time class="diary-date" datetime="${diary.date}">${formatDisplayDate(diary.date)}</time>
+                    ${areaLabel ? `<span class="diary-area-tag">${escapeHtml(areaLabel)}</span>` : ""}
+                </div>
                 <div class="diary-weather">
                     ${iconUrl ? `<img src="${iconUrl}" alt="${diary.weather || "날씨"}" loading="lazy">` : ""}
                     <div class="weather-info">
@@ -447,17 +481,27 @@ async function loadDiaryForSelectedDate() {
     try {
         const diaries = await fetchDiary(diaryDateInput.value);
         if (diaries.length > 0) {
+            const diary = diaries[0];
             editingDate = diaryDateInput.value;
             modalTitle.textContent = "일기 수정";
-            diaryTextInput.value = diaries[0].text;
+            diaryTextInput.value = diary.text;
             formNote.classList.add("hidden");
             btnDelete.classList.remove("hidden");
+
+            if (diary.areaId) {
+                const area = await getAreaById(diary.areaId);
+                if (area) {
+                    setSelectedArea(area);
+                }
+            }
         } else {
             editingDate = null;
             modalTitle.textContent = "새 일기";
             diaryTextInput.value = "";
             formNote.classList.remove("hidden");
             btnDelete.classList.add("hidden");
+            renderDiarySelectedArea();
+            updateFormNote();
         }
     } catch (error) {
         alert(error.message);
@@ -466,6 +510,7 @@ async function loadDiaryForSelectedDate() {
 
 async function openModal(date) {
     diaryDateInput.value = date || getTodayString();
+    diaryAreaSearchInput.value = "";
     resetDiaryAreaSearch();
     renderDiarySelectedArea();
     updateFormNote();
@@ -492,6 +537,7 @@ async function loadDiaries() {
     emptyState.classList.add("hidden");
 
     try {
+        await ensureAreaCache();
         const diaries = await fetchDiaries(startDateInput.value, endDateInput.value);
         renderDiaries(diaries);
     } catch (error) {
@@ -507,15 +553,22 @@ diaryForm.addEventListener("submit", async (event) => {
 
     const date = diaryDateInput.value;
     const text = diaryTextInput.value.trim();
+    const area = getSelectedArea();
+
     if (!text || date > getTodayString()) {
+        return;
+    }
+
+    if (!area) {
+        alert("지역을 선택해 주세요.");
         return;
     }
 
     try {
         if (editingDate) {
-            await updateDiary(editingDate, text);
+            await updateDiary2(editingDate, area.name, text);
         } else {
-            await createDiary(date, text);
+            await createDiary2(date, area.name, text);
         }
         closeModal();
         await loadDiaries();
@@ -549,5 +602,6 @@ startDateInput.addEventListener("change", () => clampToToday(startDateInput));
 endDateInput.addEventListener("change", () => clampToToday(endDateInput));
 
 initDiaryAreaSearch();
+updateHeaderSubtitle();
 setDefaultDateRange();
 loadDiaries();

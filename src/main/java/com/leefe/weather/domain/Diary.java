@@ -24,4 +24,5 @@ public class Diary {
     private double temperature;
     private String text;
     private LocalDate date;
+    private Long areaId = 1835848L;
 }

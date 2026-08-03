@@ -2,6 +2,8 @@ package com.leefe.weather.service;
 
 import com.leefe.weather.WeatherApplication;
 import com.leefe.weather.domain.Diary;
+import com.leefe.weather.dto.request.CreateDiary;
+import com.leefe.weather.repository.AreaRepository;
 import com.leefe.weather.repository.DiaryRepository;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -28,9 +30,11 @@ public class DiaryService {
     private String apiKey;
 
     private final DiaryRepository diaryRepository;
+    private final AreaRepository areaRepository;
 
-    public DiaryService(DiaryRepository diaryRepository) {
+    public DiaryService(DiaryRepository diaryRepository,  AreaRepository areaRepository) {
         this.diaryRepository = diaryRepository;
+        this.areaRepository = areaRepository;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(WeatherApplication.class);
@@ -55,6 +59,30 @@ public class DiaryService {
         logger.info("end to create diary");
     }
 
+    public void createDiary2(LocalDate date, CreateDiary createDiary) {
+        logger.info("started to create diary2");
+        // open weather map에서 날씨 데이터 가져오기
+        String weatherData = getWeatherStringByCity(createDiary.getCityName());
+
+        // 받아온 날씨 json 파싱하기
+        Map<String, Object> parsedWeather = parseWeather(weatherData);
+
+        // 파싱된 데이터 + 일기 값 우리 db에 넣기
+        Diary nowDiary = new Diary();
+        nowDiary.setWeather(parsedWeather.get("main").toString());
+        nowDiary.setIcon(parsedWeather.get("icon").toString());
+        nowDiary.setTemperature((Double)parsedWeather.get("temp"));
+        nowDiary.setText(createDiary.getText());
+        nowDiary.setDate(date);
+
+        Long AreaId = areaRepository.getAreaByName(createDiary.getCityName()).getId();
+
+        nowDiary.setAreaId(AreaId);
+
+        diaryRepository.save(nowDiary);
+        logger.info("end to create diary2");
+    }
+
     public List<Diary> readDiary(LocalDate date) {
         logger.debug("read diary");
         return diaryRepository.findAllByDate(date);
@@ -63,6 +91,14 @@ public class DiaryService {
     public void updateDiary(LocalDate date, String text) {
         Diary nowDiary = diaryRepository.getFirstByDate(date);
         nowDiary.setText(text);
+        diaryRepository.save(nowDiary);
+    }
+
+    public void updateDiary2(LocalDate date, CreateDiary createDiary) {
+        Diary nowDiary = diaryRepository.getFirstByDate(date);
+        nowDiary.setText(createDiary.getText());
+        Long AreaId = areaRepository.getAreaByName(createDiary.getCityName()).getId();
+        nowDiary.setAreaId(AreaId);
         diaryRepository.save(nowDiary);
     }
 
@@ -76,6 +112,33 @@ public class DiaryService {
 
     private String getWeatherString() {
         String apiUrl = "https://api.openweathermap.org/data/2.5/weather?q=seoul&appid=" + apiKey;
+
+        try {
+            URL url = new URL(apiUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            int responseCode = connection.getResponseCode();
+            BufferedReader br;
+            if (responseCode == 200) {
+                br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+            while((inputLine = br.readLine()) != null) {
+                response.append(inputLine);
+            }
+            br.close();
+
+            return response.toString();
+        } catch (Exception e) {
+            return "failed to get response";
+        }
+    }
+
+    private String getWeatherStringByCity(String city) {
+        String apiUrl = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=" + apiKey;
 
         try {
             URL url = new URL(apiUrl);
