@@ -35,6 +35,13 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
   
 ## 🌐 배포 방법
 #### .jar
+1. ps -ef | grep java
+2. kill [PID]
+3. ./gradlew clean
+4. git fetch origin
+5. git pull origin main
+6. ./gradlew build -x test
+7. nohup java -jar [prj.jar] &
 
   
 ## 📌 주요 기능
@@ -57,6 +64,6 @@ https://newstroyblog.tistory.com/652
 - 사용자 계정
 - 실시간 많이 듣는 노래 틀기
 - AI 제목 생성
-- AI 대화형 일기 -> 음성인식
+- AI 대화형 일기 -> 음성인식 : ai 응담, 요청 테이블 생성 : 멀티턴으로 응답 요청
 - Docker
 - Jenkins
