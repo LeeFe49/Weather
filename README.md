@@ -58,9 +58,10 @@
 - Spring Security
 - 기본 로그인
 - 소셜 로그인
-서버셋팅 출처: https://vennycode.tistory.com/54
-https://korea-potato.tistory.com/39#google_vignette
-https://newstroyblog.tistory.com/652
+서버셋팅 출처:
+#### https://vennycode.tistory.com/54
+#### https://korea-potato.tistory.com/39#google_vignette
+#### https://newstroyblog.tistory.com/652
 
 #### 추가기능 (예정)
 - 사용자 계정
