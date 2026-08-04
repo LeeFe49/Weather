@@ -3,11 +3,12 @@
 
   
 ## 🖥️ 프로젝트 소개
-Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 일기와 포트폴리오를 관리하기 위해 개발하고 있습니다.
+개인 일기와 포트폴리오를 관리하기 위해 개발하고 있습니다.
 
   
 ## 🕰️ 개발 기간
 * 26.07.20일 ~
+
 
 ### ⚙️ 개발 환경
 - **Language** : Java 17
@@ -16,6 +17,7 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 - **ORM** : JPA
 - **Frontend**: Thymeleaf
 - **Build**: Gradle
+
 
 ### 🖥️ 서버 환경
 - oracle cloud server
