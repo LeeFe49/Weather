@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 · 날씨 일기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="sky-bg"></div>
+
+    <main class="auth-page">
+        <div class="auth-card">
+            <a href="/" class="auth-brand">
+                <span class="brand-icon" aria-hidden="true">☁</span>
+                <div>
+                    <h1>회원가입</h1>
+                    <p class="subtitle">날씨 일기와 함께 시작해 보세요</p>
+                </div>
+            </a>
+
+            <form id="signupForm" class="auth-form" novalidate>
+                <label class="field">
+                    <span class="label-text">아이디</span>
+                    <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" autocomplete="username" required minlength="2">
+                </label>
+                <label class="field">
+                    <span class="label-text">비밀번호</span>
+                    <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" autocomplete="new-password" required minlength="4">
+                </label>
+                <label class="field">
+                    <span class="label-text">비밀번호 확인</span>
+                    <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="비밀번호를 다시 입력하세요" autocomplete="new-password" required minlength="4">
+                </label>
+
+                <p class="auth-message hidden" id="authMessage" role="alert"></p>
+
+                <button type="submit" class="btn btn-primary auth-submit" id="btnSignup">가입하기</button>
+            </form>
+
+            <p class="auth-footer">
+                이미 계정이 있으신가요?
+                <a href="/signin.html">로그인</a>
+            </p>
+        </div>
+    </main>
+
+    <script src="/js/signup.js"></script>
+</body>
+</html>
