@@ -36,13 +36,13 @@ public class MemberService implements UserDetailsService {
 
     public Member authenticate(Auth.SignIn memebr) {
 
-        var user = this.memberRepository.findByUsername(memebr.getUsername())
+        var member = this.memberRepository.findByUsername(memebr.getUsername())
                             .orElseThrow(() -> new RuntimeException("존재하지 않는 ID 입니다"));
 
-        if (this.passwordEncoder.matches(memebr.getPassword(), user.getPassword())) {
+        if (!this.passwordEncoder.matches(memebr.getPassword(), member.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다");
         }
 
-        return user;
+        return member;
     }
 }

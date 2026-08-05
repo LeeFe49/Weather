@@ -24,7 +24,7 @@ public class TokenProvider {
 
     private final MemberService memberService;
 
-    @Value("{spring.jwt.secret}")
+    @Value("${spring.jwt.secret}")
     private String secretKey;
 
     public String generateToken(String username, List<String> roles) {
@@ -56,8 +56,12 @@ public class TokenProvider {
             return false;
         }
 
-        var claims = this.parseClaims(token);
-        return claims.getExpiration().before(new Date());
+        try {
+            var claims = this.parseClaims(token);
+            return claims.getExpiration().after(new Date());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private Claims parseClaims(String token) {
