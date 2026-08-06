@@ -1,6 +1,11 @@
 package com.leefe.weather.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,11 +31,16 @@ public class Member implements UserDetails {
     private String username;
     private String password;
 
-    @ElementCollection
+    private Long areaId;
+
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (this.roles == null) {
+            return List.of();
+        }
         return this.roles.stream()
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());

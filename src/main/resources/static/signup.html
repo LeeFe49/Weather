@@ -13,7 +13,7 @@
     <div class="sky-bg"></div>
 
     <main class="auth-page">
-        <div class="auth-card">
+        <div class="auth-card auth-card-wide">
             <a href="/" class="auth-brand">
                 <span class="brand-icon" aria-hidden="true">☁</span>
                 <div>
@@ -35,6 +35,38 @@
                     <span class="label-text">비밀번호 확인</span>
                     <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="비밀번호를 다시 입력하세요" autocomplete="new-password" required minlength="4">
                 </label>
+
+                <fieldset class="field role-field">
+                    <legend class="label-text">권한</legend>
+                    <div class="role-options">
+                        <label class="role-option">
+                            <input type="radio" name="role" value="READ" checked>
+                            <span class="role-option-body">
+                                <strong>조회</strong>
+                                <small>일기 조회만 가능합니다</small>
+                            </span>
+                        </label>
+                        <label class="role-option">
+                            <input type="radio" name="role" value="WRITE">
+                            <span class="role-option-body">
+                                <strong>조회 + 작성</strong>
+                                <small>일기 조회 및 작성이 가능합니다</small>
+                            </span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <div class="field">
+                    <span class="label-text">기본 지역 (선택)</span>
+                    <div class="area-search-box">
+                        <div class="area-search-row">
+                            <input type="text" id="signupAreaSearch" placeholder="지역 이름 입력 (예: Seoul)" autocomplete="off">
+                            <button type="button" class="btn btn-secondary" id="btnSignupAreaSearch">검색</button>
+                        </div>
+                        <ul class="area-search-results hidden" id="signupAreaResults"></ul>
+                    </div>
+                    <div class="diary-area-selected hidden" id="signupAreaSelected"></div>
+                </div>
 
                 <p class="auth-message hidden" id="authMessage" role="alert"></p>
 

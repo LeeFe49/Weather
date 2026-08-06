@@ -17,14 +17,21 @@ public class Auth {
     public static class SignUp {
         private String username;
         private String password;
+        private Long areaId;
         private List<String> roles;
 
         public Member toEntity() {
             return Member.builder()
                     .username(this.username)
                     .password(this.password)
+                    .areaId(this.areaId)
                     .roles(this.roles)
                     .build();
         }
+    }
+
+    @Data
+    public static class UpdateArea {
+        private Long areaId;
     }
 }

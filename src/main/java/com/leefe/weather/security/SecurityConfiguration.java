@@ -17,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter authenticationFilter;
+    private final JwtAuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -27,9 +28,26 @@ public class SecurityConfiguration {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**/signup", "/**/signin", "/**")
-                        .permitAll()
+                        .requestMatchers("/auth/signup", "/auth/signin").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/signup.html",
+                                "/signin.html",
+                                "/css/**",
+                                "/js/**",
+                                "/read/areas",
+                                "/read/areas/**",
+                                "/read/area",
+                                "/find/areas",
+                                "/update/areas",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
                         .anyRequest()
                         .authenticated()
                 )

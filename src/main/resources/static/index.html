@@ -21,9 +21,12 @@
                     <p class="subtitle" id="headerSubtitle">날씨와 함께 기록하는 하루</p>
                 </div>
             </div>
-            <div class="header-actions">
-                <a href="/signin.html" class="btn btn-ghost">로그인</a>
-                <a href="/signup.html" class="btn btn-secondary">회원가입</a>
+            <div class="header-actions" id="headerActions">
+                <span class="header-user hidden" id="headerUser"></span>
+                <button type="button" class="btn btn-ghost hidden" id="btnProfile">내 정보</button>
+                <a href="/signin.html" class="btn btn-ghost" id="btnLogin">로그인</a>
+                <a href="/signup.html" class="btn btn-secondary" id="btnSignup">회원가입</a>
+                <button type="button" class="btn btn-ghost hidden" id="btnLogout">로그아웃</button>
                 <button type="button" class="btn btn-primary" id="btnNewDiary">
                     <span aria-hidden="true">+</span> 새 일기
                 </button>
@@ -45,7 +48,7 @@
                 </label>
                 <button type="button" class="btn btn-secondary" id="btnSearch">조회</button>
             </div>
-            <p class="hint">일기를 저장하면 선택한 지역의 날씨가 함께 기록됩니다.</p>
+            <p class="hint">로그인 후 내 일기만 조회·작성할 수 있습니다. 저장 시 선택한 지역의 날씨가 함께 기록됩니다.</p>
         </section>
 
         <section class="diary-list" id="diaryList" aria-live="polite"></section>
@@ -118,6 +121,49 @@
         </form>
     </dialog>
 
+    <dialog class="modal" id="profileModal">
+        <form method="dialog" class="modal-content" id="profileForm">
+            <div class="modal-header">
+                <h2>내 정보</h2>
+                <button type="button" class="btn-icon" id="btnCloseProfile" aria-label="닫기">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="profile-summary">
+                    <div class="profile-row">
+                        <span class="label-text">아이디</span>
+                        <strong id="profileUsername">-</strong>
+                    </div>
+                    <div class="profile-row">
+                        <span class="label-text">권한</span>
+                        <strong id="profileRoles">-</strong>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <span class="label-text">기본 지역</span>
+                    <div class="area-search-box">
+                        <div class="area-search-row">
+                            <input type="text" id="profileAreaSearch" placeholder="지역 이름 입력 (예: Seoul)" autocomplete="off">
+                            <button type="button" class="btn btn-secondary" id="btnProfileAreaSearch">검색</button>
+                        </div>
+                        <ul class="area-search-results hidden" id="profileAreaResults"></ul>
+                    </div>
+                    <div class="diary-area-selected hidden" id="profileAreaSelected"></div>
+                    <p class="form-note">기본 지역은 일기 작성 시 자동으로 사용됩니다.</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" id="btnCancelProfile">취소</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveProfile">저장</button>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="/js/auth.js"></script>
     <script src="/js/app.js"></script>
 </body>
 </html>

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -25,4 +26,7 @@ public class Diary {
     private String text;
     private LocalDate date;
     private Long areaId = 1835848L;
+    private Long memberId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

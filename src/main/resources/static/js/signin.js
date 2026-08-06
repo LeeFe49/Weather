@@ -2,8 +2,6 @@ const signinForm = document.getElementById("signinForm");
 const authMessage = document.getElementById("authMessage");
 const btnSignin = document.getElementById("btnSignin");
 
-const TOKEN_KEY = "weather.authToken";
-
 function showMessage(text, isError = true) {
     authMessage.textContent = text;
     authMessage.classList.remove("hidden", "success", "error");
@@ -26,7 +24,7 @@ async function signin(username, password) {
         throw new Error(body || "로그인에 실패했습니다.");
     }
 
-    return response.text();
+    return response.text().then((token) => token.replace(/^"|"$/g, ""));
 }
 
 signinForm.addEventListener("submit", async (event) => {

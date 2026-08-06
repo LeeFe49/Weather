@@ -9,6 +9,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -18,6 +21,7 @@ public class MemberService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return this.memberRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("couldn't find user -> " + username));
@@ -44,5 +48,12 @@ public class MemberService implements UserDetailsService {
         }
 
         return member;
+    }
+
+    public Member updateMember(Long id, Long areaId) {
+        Member member = this.memberRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다"));
+        member.setAreaId(areaId);
+        return this.memberRepository.save(member);
     }
 }

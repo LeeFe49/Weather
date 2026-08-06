@@ -3,11 +3,12 @@
 
   
 ## 🖥️ 프로젝트 소개
-Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 일기와 포트폴리오를 관리하기 위해 개발하고 있습니다.
+개인 일기와 포트폴리오를 관리하기 위해 개발하고 있습니다.
 
   
 ## 🕰️ 개발 기간
 * 26.07.20일 ~
+
 
 ### ⚙️ 개발 환경
 - **Language** : Java 17
@@ -16,6 +17,7 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 - **ORM** : JPA
 - **Frontend**: Thymeleaf
 - **Build**: Gradle
+
 
 ### 🖥️ 서버 환경
 - oracle cloud server
@@ -34,7 +36,18 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 
   
 ## 🌐 배포 방법
+<<<<<<< HEAD
 #### ROOT.war
+=======
+#### .jar
+1. ps -ef | grep java
+2. kill [PID]
+3. ./gradlew clean
+4. git fetch origin
+5. git pull origin main
+6. ./gradlew build -x test
+7. nohup java -jar [prj.jar] &
+>>>>>>> 79d590dc8885f454714789bbe26eed1c78aa9d94
 
   
 ## 📌 주요 기능
@@ -49,14 +62,15 @@ Vennygo는 [베니고](https://www.vennygo.com)의 프로젝트이며, 개인 �
 - Spring Security
 - 기본 로그인
 - 소셜 로그인
-서버셋팅 출처: https://vennycode.tistory.com/54
-https://korea-potato.tistory.com/39#google_vignette
-https://newstroyblog.tistory.com/652
+서버셋팅 출처:
+#### https://vennycode.tistory.com/54
+#### https://korea-potato.tistory.com/39#google_vignette
+#### https://newstroyblog.tistory.com/652
 
 #### 추가기능 (예정)
 - 사용자 계정
 - 실시간 많이 듣는 노래 틀기
 - AI 제목 생성
-- AI 대화형 일기 -> 음성인식
+- AI 대화형 일기 -> 음성인식 : ai 응담, 요청 테이블 생성 : 멀티턴으로 응답 요청
 - Docker
 - Jenkins

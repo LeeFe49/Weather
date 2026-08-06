@@ -56,14 +56,4 @@ public class JpaMemoRepositoryTest {
         assertEquals(result.get().getText(), newMemo.getText());
     }
 
-    @Test
-    void createDiary2TextTest() {
-        Diary newDiary = new Diary();
-        CreateDiary createDiary = new CreateDiary();
-        createDiary.setCityName("naju");
-        createDiary.setText("test");
-
-        diaryService.createDiary2(LocalDate.parse("2026-08-03"), createDiary);
-
-    }
 }

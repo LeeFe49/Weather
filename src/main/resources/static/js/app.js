@@ -20,12 +20,29 @@ const diaryAreaSelected = document.getElementById("diaryAreaSelected");
 const btnDiaryAreaSearch = document.getElementById("btnDiaryAreaSearch");
 const headerSubtitle = document.getElementById("headerSubtitle");
 
+const headerUser = document.getElementById("headerUser");
+const btnProfile = document.getElementById("btnProfile");
+const btnLogin = document.getElementById("btnLogin");
+const btnSignup = document.getElementById("btnSignup");
+const btnLogout = document.getElementById("btnLogout");
+
+const profileModal = document.getElementById("profileModal");
+const profileForm = document.getElementById("profileForm");
+const profileUsername = document.getElementById("profileUsername");
+const profileRoles = document.getElementById("profileRoles");
+const profileAreaSearchInput = document.getElementById("profileAreaSearch");
+const profileAreaResults = document.getElementById("profileAreaResults");
+const profileAreaSelected = document.getElementById("profileAreaSelected");
+const btnProfileAreaSearch = document.getElementById("btnProfileAreaSearch");
+
 const SELECTED_AREA_KEY = "weather.selectedArea";
 
 let editingDate = null;
 let calendarView = { year: 0, month: 0 };
 let diaryDatesInMonth = new Set();
 let areaByIdCache = new Map();
+let profilePendingArea = null;
+let currentMember = null;
 
 function getTodayString() {
     return formatDate(new Date());
@@ -56,12 +73,25 @@ function formatCoords(lat, lon) {
     return `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
 }
 
+function formatRolesDisplay(roles) {
+    if (!roles || roles.length === 0) {
+        return "없음";
+    }
+    if (roles.includes("ROLE_WRITE")) {
+        return "조회 + 작성";
+    }
+    if (roles.includes("ROLE_READ")) {
+        return "조회";
+    }
+    return roles.join(", ");
+}
+
 function getSelectedArea() {
     const raw = localStorage.getItem(SELECTED_AREA_KEY);
     return raw ? JSON.parse(raw) : null;
 }
 
-function setSelectedArea(area) {
+function saveSelectedAreaLocally(area) {
     if (area) {
         localStorage.setItem(
             SELECTED_AREA_KEY,
@@ -78,6 +108,83 @@ function setSelectedArea(area) {
     }
     renderDiarySelectedArea();
     updateFormNote();
+    updateHeaderSubtitle();
+}
+
+async function saveMemberArea(areaId) {
+    const response = await authFetch("/auth/update", {
+        method: "POST",
+        body: JSON.stringify({ areaId }),
+    });
+
+    if (!response.ok) {
+        throw new Error("지역을 저장하지 못했습니다.");
+    }
+
+    return response.json();
+}
+
+async function loadMemberArea() {
+    const response = await authFetch("/auth/me");
+    if (!response.ok) {
+        return;
+    }
+
+    currentMember = await response.json();
+    if (!currentMember.areaId) {
+        return;
+    }
+
+    await ensureAreaCache();
+    const area = await getAreaById(currentMember.areaId);
+    if (area) {
+        saveSelectedAreaLocally(area);
+    }
+}
+
+async function fetchCurrentMember() {
+    const response = await authFetch("/auth/me");
+    if (!response.ok) {
+        throw new Error("회원 정보를 불러오지 못했습니다.");
+    }
+    currentMember = await response.json();
+    return currentMember;
+}
+
+async function setSelectedArea(area) {
+    try {
+        if (area) {
+            await saveMemberArea(area.id);
+            areaByIdCache.set(area.id, area);
+            saveSelectedAreaLocally(area);
+        } else {
+            await saveMemberArea(null);
+            saveSelectedAreaLocally(null);
+        }
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function updateHeaderAuthUI() {
+    const username = getUsernameFromToken();
+
+    if (isLoggedIn() && username) {
+        headerUser.textContent = `${username}님`;
+        headerUser.classList.remove("hidden");
+        btnProfile.classList.remove("hidden");
+        btnLogin.classList.add("hidden");
+        btnSignup.classList.add("hidden");
+        btnLogout.classList.remove("hidden");
+        headerSubtitle.textContent = `${username}님의 날씨 일기`;
+        return;
+    }
+
+    headerUser.classList.add("hidden");
+    btnProfile.classList.add("hidden");
+    btnLogin.classList.remove("hidden");
+    btnSignup.classList.remove("hidden");
+    btnLogout.classList.add("hidden");
     updateHeaderSubtitle();
 }
 
@@ -174,7 +281,6 @@ function renderDiaryAreaResults(areas) {
             <span>${formatCoords(area.lat, area.lon)}${area.text ? ` · ${escapeHtml(area.text)}` : ""}</span>
         `;
         button.addEventListener("click", () => {
-            areaByIdCache.set(area.id, area);
             setSelectedArea(area);
             diaryAreaSearchInput.value = "";
             resetDiaryAreaSearch();
@@ -222,6 +328,147 @@ function initDiaryAreaSearch() {
     document.addEventListener("click", (event) => {
         if (!event.target.closest(".area-search-box")) {
             diaryAreaResults.classList.add("hidden");
+            profileAreaResults.classList.add("hidden");
+        }
+    });
+}
+
+function renderProfileSelectedArea() {
+    if (!profilePendingArea) {
+        profileAreaSelected.classList.add("hidden");
+        profileAreaSelected.innerHTML = "";
+        return;
+    }
+
+    profileAreaSelected.classList.remove("hidden");
+    profileAreaSelected.innerHTML = `
+        <div class="diary-area-selected-info">
+            <strong>${escapeHtml(profilePendingArea.name)}</strong>
+            ${profilePendingArea.text ? `<span class="diary-area-selected-memo">${escapeHtml(profilePendingArea.text)}</span>` : ""}
+            <span class="diary-area-selected-coords">${formatCoords(profilePendingArea.lat, profilePendingArea.lon)}</span>
+        </div>
+        <button type="button" class="btn-clear-area" id="btnClearProfileArea">해제</button>
+    `;
+
+    document.getElementById("btnClearProfileArea").addEventListener("click", () => {
+        profilePendingArea = null;
+        renderProfileSelectedArea();
+        resetProfileAreaSearch();
+    });
+}
+
+function resetProfileAreaSearch() {
+    profileAreaResults.classList.add("hidden");
+    profileAreaResults.innerHTML = "";
+}
+
+function renderProfileAreaResults(areas) {
+    profileAreaResults.innerHTML = "";
+
+    if (areas.length === 0) {
+        profileAreaResults.innerHTML = `<li class="area-search-empty">검색 결과가 없습니다.</li>`;
+        profileAreaResults.classList.remove("hidden");
+        return;
+    }
+
+    areas.forEach((area) => {
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "area-search-result";
+        button.innerHTML = `
+            <strong>${escapeHtml(area.name)}</strong>
+            <span>${formatCoords(area.lat, area.lon)}${area.text ? ` · ${escapeHtml(area.text)}` : ""}</span>
+        `;
+        button.addEventListener("click", () => {
+            profilePendingArea = area;
+            renderProfileSelectedArea();
+            profileAreaSearchInput.value = "";
+            resetProfileAreaSearch();
+        });
+        item.appendChild(button);
+        profileAreaResults.appendChild(item);
+    });
+
+    profileAreaResults.classList.remove("hidden");
+}
+
+async function performProfileAreaSearch() {
+    const query = profileAreaSearchInput.value.trim();
+    if (!query) {
+        resetProfileAreaSearch();
+        return;
+    }
+
+    try {
+        btnProfileAreaSearch.disabled = true;
+        const areas = await searchDiaryAreas(query);
+        renderProfileAreaResults(areas);
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btnProfileAreaSearch.disabled = false;
+    }
+}
+
+async function openProfileModal() {
+    try {
+        const member = await fetchCurrentMember();
+        profileUsername.textContent = member.username;
+        profileRoles.textContent = formatRolesDisplay(member.roles);
+
+        profileAreaSearchInput.value = "";
+        resetProfileAreaSearch();
+
+        if (member.areaId) {
+            await ensureAreaCache();
+            profilePendingArea = await getAreaById(member.areaId);
+        } else {
+            profilePendingArea = getSelectedArea();
+        }
+
+        renderProfileSelectedArea();
+        profileModal.showModal();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function closeProfileModal() {
+    profileModal.close();
+}
+
+function initProfileModal() {
+    btnProfile.addEventListener("click", openProfileModal);
+    btnProfileAreaSearch.addEventListener("click", performProfileAreaSearch);
+    document.getElementById("btnCloseProfile").addEventListener("click", closeProfileModal);
+    document.getElementById("btnCancelProfile").addEventListener("click", closeProfileModal);
+
+    profileAreaSearchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            performProfileAreaSearch();
+        }
+    });
+
+    profileForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        try {
+            const areaId = profilePendingArea?.id ?? null;
+            await saveMemberArea(areaId);
+            if (profilePendingArea) {
+                areaByIdCache.set(profilePendingArea.id, profilePendingArea);
+                saveSelectedAreaLocally(profilePendingArea);
+            } else {
+                saveSelectedAreaLocally(null);
+            }
+            if (currentMember) {
+                currentMember.areaId = areaId;
+            }
+            closeProfileModal();
+        } catch (error) {
+            alert(error.message);
         }
     });
 }
@@ -370,27 +617,21 @@ function showLoading(show) {
 
 async function fetchDiaries(startDate, endDate) {
     const params = new URLSearchParams({ startDate, endDate });
-    const response = await fetch(`/read/diaries?${params}`);
+    const response = await authFetch(`/read/diaries?${params}`);
     if (!response.ok) {
         throw new Error("일기를 불러오지 못했습니다.");
     }
     return response.json();
 }
 
-async function fetchDiary(date) {
-    const params = new URLSearchParams({ date });
-    const response = await fetch(`/read/diary?${params}`);
-    if (!response.ok) {
-        throw new Error("일기를 불러오지 못했습니다.");
-    }
-    return response.json();
+async function fetchDiaryByDate(date) {
+    return fetchDiaries(date, date);
 }
 
-async function createDiary2(date, cityName, text) {
+async function createDiary(date, cityName, text) {
     const params = new URLSearchParams({ date });
-    const response = await fetch(`/create/diary2?${params}`, {
+    const response = await authFetch(`/create/diary?${params}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cityName, text }),
     });
     if (!response.ok) {
@@ -400,9 +641,8 @@ async function createDiary2(date, cityName, text) {
 
 async function updateDiary2(date, cityName, text) {
     const params = new URLSearchParams({ date });
-    const response = await fetch(`/update/diary2?${params}`, {
+    const response = await authFetch(`/update/diary2?${params}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cityName, text }),
     });
     if (!response.ok) {
@@ -412,7 +652,7 @@ async function updateDiary2(date, cityName, text) {
 
 async function deleteDiary(date) {
     const params = new URLSearchParams({ date });
-    const response = await fetch(`/delete/diary?${params}`, { method: "DELETE" });
+    const response = await authFetch(`/delete/diary?${params}`, { method: "DELETE" });
     if (!response.ok) {
         throw new Error("일기를 삭제하지 못했습니다.");
     }
@@ -479,7 +719,7 @@ async function loadDiaryForSelectedDate() {
     }
 
     try {
-        const diaries = await fetchDiary(diaryDateInput.value);
+        const diaries = await fetchDiaryByDate(diaryDateInput.value);
         if (diaries.length > 0) {
             const diary = diaries[0];
             editingDate = diaryDateInput.value;
@@ -491,7 +731,7 @@ async function loadDiaryForSelectedDate() {
             if (diary.areaId) {
                 const area = await getAreaById(diary.areaId);
                 if (area) {
-                    setSelectedArea(area);
+                    saveSelectedAreaLocally(area);
                 }
             }
         } else {
@@ -568,7 +808,7 @@ diaryForm.addEventListener("submit", async (event) => {
         if (editingDate) {
             await updateDiary2(editingDate, area.name, text);
         } else {
-            await createDiary2(date, area.name, text);
+            await createDiary(date, area.name, text);
         }
         closeModal();
         await loadDiaries();
@@ -601,7 +841,14 @@ btnCalNext.addEventListener("click", () => changeCalendarMonth(1));
 startDateInput.addEventListener("change", () => clampToToday(startDateInput));
 endDateInput.addEventListener("change", () => clampToToday(endDateInput));
 
+btnLogout.addEventListener("click", logout);
+
 initDiaryAreaSearch();
-updateHeaderSubtitle();
-setDefaultDateRange();
-loadDiaries();
+initProfileModal();
+if (requireAuth()) {
+    updateHeaderAuthUI();
+    setDefaultDateRange();
+    loadMemberArea().finally(() => {
+        loadDiaries();
+    });
+}

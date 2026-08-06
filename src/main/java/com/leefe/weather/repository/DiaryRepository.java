@@ -12,7 +12,7 @@ import java.util.List;
 public interface DiaryRepository extends JpaRepository<Diary, Integer> {
     List<Diary> findAllByDate(LocalDate date);
 
-    List<Diary> findAllByDateBetweenOrderByDateDesc(LocalDate startDate, LocalDate endDate);
+    List<Diary> findAllByMemberIdAndDateBetweenOrderByDateDesc(Long memberId, LocalDate startDate, LocalDate endDate);
 
     Diary getFirstByDate(LocalDate date);
 

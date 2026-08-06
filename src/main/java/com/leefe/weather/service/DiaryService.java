@@ -19,6 +19,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,28 +40,8 @@ public class DiaryService {
 
     private static final Logger logger = LoggerFactory.getLogger(WeatherApplication.class);
 
-    public void createDiary(LocalDate date, String text) {
+    public void createDiary(Long memberId, LocalDate date, CreateDiary createDiary) {
         logger.info("started to create diary");
-        // open weather map에서 날씨 데이터 가져오기
-        String weatherData = getWeatherString();
-
-        // 받아온 날씨 json 파싱하기
-        Map<String, Object> parsedWeather = parseWeather(weatherData);
-
-        // 파싱된 데이터 + 일기 값 우리 db에 넣기
-        Diary nowDiary = new Diary();
-        nowDiary.setWeather(parsedWeather.get("main").toString());
-        nowDiary.setIcon(parsedWeather.get("icon").toString());
-        nowDiary.setTemperature((Double)parsedWeather.get("temp"));
-        nowDiary.setText(text);
-        nowDiary.setDate(date);
-
-        diaryRepository.save(nowDiary);
-        logger.info("end to create diary");
-    }
-
-    public void createDiary2(LocalDate date, CreateDiary createDiary) {
-        logger.info("started to create diary2");
         // open weather map에서 날씨 데이터 가져오기
         String weatherData = getWeatherStringByCity(createDiary.getCityName());
 
@@ -74,13 +55,16 @@ public class DiaryService {
         nowDiary.setTemperature((Double)parsedWeather.get("temp"));
         nowDiary.setText(createDiary.getText());
         nowDiary.setDate(date);
+        nowDiary.setMemberId(memberId);
+        nowDiary.setCreatedAt(LocalDateTime.now());
+        nowDiary.setUpdatedAt(LocalDateTime.now());
 
         Long AreaId = areaRepository.getAreaByName(createDiary.getCityName()).getId();
 
         nowDiary.setAreaId(AreaId);
 
         diaryRepository.save(nowDiary);
-        logger.info("end to create diary2");
+        logger.info("end to create diary");
     }
 
     public List<Diary> readDiary(LocalDate date) {
@@ -91,14 +75,7 @@ public class DiaryService {
     public void updateDiary(LocalDate date, String text) {
         Diary nowDiary = diaryRepository.getFirstByDate(date);
         nowDiary.setText(text);
-        diaryRepository.save(nowDiary);
-    }
-
-    public void updateDiary2(LocalDate date, CreateDiary createDiary) {
-        Diary nowDiary = diaryRepository.getFirstByDate(date);
-        nowDiary.setText(createDiary.getText());
-        Long AreaId = areaRepository.getAreaByName(createDiary.getCityName()).getId();
-        nowDiary.setAreaId(AreaId);
+        nowDiary.setUpdatedAt(LocalDateTime.now());
         diaryRepository.save(nowDiary);
     }
 
@@ -106,35 +83,8 @@ public class DiaryService {
         diaryRepository.deleteAllByDate(date);
     }
 
-    public List<Diary> readDiaries(LocalDate startDate, LocalDate endDate) {
-        return diaryRepository.findAllByDateBetweenOrderByDateDesc(startDate, endDate);
-    }
-
-    private String getWeatherString() {
-        String apiUrl = "https://api.openweathermap.org/data/2.5/weather?q=seoul&appid=" + apiKey;
-
-        try {
-            URL url = new URL(apiUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            int responseCode = connection.getResponseCode();
-            BufferedReader br;
-            if (responseCode == 200) {
-                br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            } else {
-                br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-            }
-            String inputLine;
-            StringBuilder response = new StringBuilder();
-            while((inputLine = br.readLine()) != null) {
-                response.append(inputLine);
-            }
-            br.close();
-
-            return response.toString();
-        } catch (Exception e) {
-            return "failed to get response";
-        }
+    public List<Diary> readDiaries(Long memberId, LocalDate startDate, LocalDate endDate) {
+        return diaryRepository.findAllByMemberIdAndDateBetweenOrderByDateDesc(memberId, startDate, endDate);
     }
 
     private String getWeatherStringByCity(String city) {
