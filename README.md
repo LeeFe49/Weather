@@ -36,18 +36,7 @@
 
   
 ## 🌐 배포 방법
-<<<<<<< HEAD
 #### ROOT.war
-=======
-#### .jar
-1. ps -ef | grep java
-2. kill [PID]
-3. ./gradlew clean
-4. git fetch origin
-5. git pull origin main
-6. ./gradlew build -x test
-7. nohup java -jar [prj.jar] &
->>>>>>> 79d590dc8885f454714789bbe26eed1c78aa9d94
 
   
 ## 📌 주요 기능
