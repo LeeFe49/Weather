@@ -39,4 +39,6 @@ logs
 
 history.city.list.json
 
-client_secret_1027244391937-m8j96dqsulup77oddscf3avep6nf3u0d.apps.googleusercontent.com
+# Google OAuth credentials (never commit)
+client_secret*.json
+**/client_secret*.json
