@@ -3,6 +3,7 @@ package com.leefe.weather.service;
 import com.leefe.weather.WeatherApplication;
 import com.leefe.weather.domain.Diary;
 import com.leefe.weather.dto.request.CreateDiary;
+import com.leefe.weather.dto.request.UpdateDiary;
 import com.leefe.weather.repository.AreaRepository;
 import com.leefe.weather.repository.DiaryRepository;
 import org.json.simple.JSONArray;
@@ -72,9 +73,9 @@ public class DiaryService {
         return diaryRepository.findAllByDate(date);
     }
 
-    public void updateDiary(LocalDate date, String text) {
-        Diary nowDiary = diaryRepository.getFirstByDate(date);
-        nowDiary.setText(text);
+    public void updateDiary(LocalDate date, UpdateDiary updateDiary) {
+        Diary nowDiary = diaryRepository.findDiaryById(updateDiary.getDiaryId());
+        nowDiary.setText(updateDiary.getText());
         nowDiary.setUpdatedAt(LocalDateTime.now());
         diaryRepository.save(nowDiary);
     }

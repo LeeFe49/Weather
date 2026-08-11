@@ -38,6 +38,7 @@ const btnProfileAreaSearch = document.getElementById("btnProfileAreaSearch");
 const SELECTED_AREA_KEY = "weather.selectedArea";
 
 let editingDate = null;
+let editingDiaryId = null;
 let calendarView = { year: 0, month: 0 };
 let diaryDatesInMonth = new Set();
 let areaByIdCache = new Map();
@@ -639,11 +640,11 @@ async function createDiary(date, cityName, text) {
     }
 }
 
-async function updateDiary2(date, cityName, text) {
+async function updateDiary2(date, diaryId, text) {
     const params = new URLSearchParams({ date });
     const response = await authFetch(`/update/diary2?${params}`, {
         method: "PUT",
-        body: JSON.stringify({ cityName, text }),
+        body: JSON.stringify({ diaryId, text }),
     });
     if (!response.ok) {
         throw new Error("일기를 수정하지 못했습니다.");
@@ -678,6 +679,7 @@ function renderDiaries(diaries) {
             : "";
         const area = areaByIdCache.get(diary.areaId);
         const areaLabel = area ? area.name : "";
+        const { text: diaryText } = parseDiaryText(diary.text);
 
         card.innerHTML = `
             <div class="diary-card-header">
@@ -693,7 +695,7 @@ function renderDiaries(diaries) {
                     </div>
                 </div>
             </div>
-            <p class="diary-text">${escapeHtml(diary.text)}</p>
+            <p class="diary-text">${escapeHtml(diaryText)}</p>
         `;
 
         card.addEventListener("click", () => openEditModal(diary.date));
@@ -705,6 +707,36 @@ function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
+}
+
+function parseDiaryText(rawText) {
+    if (!rawText || typeof rawText !== "string") {
+        return { text: rawText || "", cityName: null };
+    }
+
+    const trimmed = rawText.trim();
+    if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
+        return { text: rawText, cityName: null };
+    }
+
+    try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed.text === "string") {
+            return {
+                text: parsed.text,
+                cityName: typeof parsed.cityName === "string" ? parsed.cityName : null,
+            };
+        }
+    } catch {
+        // stored as plain text
+    }
+
+    return { text: rawText, cityName: null };
+}
+
+async function resolveAreaByName(cityName) {
+    await ensureAreaCache();
+    return [...areaByIdCache.values()].find((area) => area.name === cityName) || null;
 }
 
 async function loadDiaryForSelectedDate() {
@@ -722,13 +754,21 @@ async function loadDiaryForSelectedDate() {
         const diaries = await fetchDiaryByDate(diaryDateInput.value);
         if (diaries.length > 0) {
             const diary = diaries[0];
+            const { text, cityName } = parseDiaryText(diary.text);
+
             editingDate = diaryDateInput.value;
+            editingDiaryId = diary.id;
             modalTitle.textContent = "일기 수정";
-            diaryTextInput.value = diary.text;
+            diaryTextInput.value = text;
             formNote.classList.add("hidden");
             btnDelete.classList.remove("hidden");
 
-            if (diary.areaId) {
+            if (cityName) {
+                const area = await resolveAreaByName(cityName);
+                if (area) {
+                    saveSelectedAreaLocally(area);
+                }
+            } else if (diary.areaId) {
                 const area = await getAreaById(diary.areaId);
                 if (area) {
                     saveSelectedAreaLocally(area);
@@ -736,6 +776,7 @@ async function loadDiaryForSelectedDate() {
             }
         } else {
             editingDate = null;
+            editingDiaryId = null;
             modalTitle.textContent = "새 일기";
             diaryTextInput.value = "";
             formNote.classList.remove("hidden");
@@ -793,21 +834,20 @@ diaryForm.addEventListener("submit", async (event) => {
 
     const date = diaryDateInput.value;
     const text = diaryTextInput.value.trim();
-    const area = getSelectedArea();
 
     if (!text || date > getTodayString()) {
         return;
     }
 
-    if (!area) {
-        alert("지역을 선택해 주세요.");
-        return;
-    }
-
     try {
-        if (editingDate) {
-            await updateDiary2(editingDate, area.name, text);
+        if (editingDate && editingDiaryId) {
+            await updateDiary2(editingDate, editingDiaryId, text);
         } else {
+            const area = getSelectedArea();
+            if (!area) {
+                alert("지역을 선택해 주세요.");
+                return;
+            }
             await createDiary(date, area.name, text);
         }
         closeModal();

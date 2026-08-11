@@ -3,6 +3,7 @@ package com.leefe.weather.controller;
 import com.leefe.weather.domain.Diary;
 import com.leefe.weather.domain.Member;
 import com.leefe.weather.dto.request.CreateDiary;
+import com.leefe.weather.dto.request.UpdateDiary;
 import com.leefe.weather.service.DiaryService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,8 +40,8 @@ public class DiaryController {
     }
 
     @PutMapping("/update/diary2")
-    void updateDiary2(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, @RequestBody String text) {
-        diaryService.updateDiary(date, text);
+    void updateDiary2(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, @RequestBody UpdateDiary updateDiary) {
+        diaryService.updateDiary(date, updateDiary);
     }
 
     @DeleteMapping("/delete/diary")
