@@ -37,6 +37,14 @@
   
 ## 🌐 배포 방법
 #### ROOT.war
+#### ps -ef | grep java
+#### kill {pid}
+#### git branch : 현재 브랜치 확인
+#### git fetch
+#### git pull origin main
+#### ./gradlew clean : 기존 빌드 삭제
+#### ./gradlew build -x test : 테스트없이 jar 빌드
+#### nohup java -jar {prj}.jar & : 백그라운드로 jar 실행
 
   
 ## 📌 주요 기능
