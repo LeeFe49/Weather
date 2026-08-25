@@ -24,21 +24,21 @@ public class AuthController {
     private final MemberService memberService;
     private final TokenProvider tokenProvider;
 
-    @PostMapping("/signup")
+    @PostMapping("/signup") // 회원가입
     public ResponseEntity<MemberResponse> signup(@RequestBody Auth.SignUp request) {
         var result = this.memberService.register(request);
         return ResponseEntity.ok(MemberResponse.from(result));
     }
 
-    @PostMapping(value = "/signin", produces = MediaType.TEXT_PLAIN_VALUE)
+    @PostMapping(value = "/signin", produces = MediaType.TEXT_PLAIN_VALUE)  // 로그인, Content_type: text/plain
     public ResponseEntity<String> signin(@RequestBody Auth.SignIn request) {
-        var member = this.memberService.authenticate(request);
-        var token = this.tokenProvider.generateToken(member.getUsername(), member.getRoles());
+        var member = this.memberService.authenticate(request);  // 입력한 비밀번호 인코딩하여 DB의 username의 비밀번호와 검증
+        var token = this.tokenProvider.generateToken(member.getUsername(), member.getRoles()); // 토큰 생성
         return ResponseEntity.ok(token);
     }
 
     @GetMapping("/me")
-    public ResponseEntity<MemberResponse> me(@AuthenticationPrincipal Member member) {
+    public ResponseEntity<MemberResponse> me(@AuthenticationPrincipal Member member) { // Spring Security를 통해 현재 로그인한 사용자의 인증정보(해더의 토큰)를 MemberResponse로 반환
         if (member == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
