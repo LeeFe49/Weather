@@ -22,4 +22,5 @@ class WeatherApplicationTests {
     void trueTest() {
         assertTrue(1 == 1);
     }
+
 }

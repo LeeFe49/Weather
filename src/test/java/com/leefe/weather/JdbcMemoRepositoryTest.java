@@ -2,6 +2,7 @@ package com.leefe.weather;
 
 import com.leefe.weather.domain.Memo;
 import com.leefe.weather.repository.JdbcMemoRepository;
+import com.leefe.weather.service.GeminiService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,10 @@ public class JdbcMemoRepositoryTest {
 
     @Autowired
     JdbcMemoRepository jdbcMemoRepository;
+
+    @Autowired
+    GeminiService geminiService;
+
 
     @Test
     void insertMemoTest() {
@@ -46,5 +51,15 @@ public class JdbcMemoRepositoryTest {
         List<Memo> memoList = jdbcMemoRepository.findAll();
         System.out.println(memoList);
         assertNotNull(memoList);
+    }
+
+    @Test
+    void geminiTest1() {
+        System.out.println(geminiService.generate("오늘 맛잇는 점심을 먹었다"));
+    }
+
+    @Test
+    void geminiTest2() {
+        System.out.println(geminiService.callGemini(1L,"오늘 맛잇는 점심을 먹었다"));
     }
 }

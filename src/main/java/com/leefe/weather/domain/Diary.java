@@ -26,6 +26,8 @@ public class Diary {
     private String text;
     private LocalDate date;
     private Long areaId = 1835848L;
+    private String geminiText;
+    private String geminiQuote;
     private Long memberId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -3,6 +3,7 @@ package com.leefe.weather.service;
 import com.leefe.weather.WeatherApplication;
 import com.leefe.weather.domain.Diary;
 import com.leefe.weather.dto.request.CreateDiary;
+import com.leefe.weather.dto.request.GeminiResponse;
 import com.leefe.weather.dto.request.UpdateDiary;
 import com.leefe.weather.repository.AreaRepository;
 import com.leefe.weather.repository.DiaryRepository;
@@ -59,6 +60,8 @@ public class DiaryService {
         nowDiary.setMemberId(memberId);
         nowDiary.setCreatedAt(LocalDateTime.now());
         nowDiary.setUpdatedAt(LocalDateTime.now());
+        nowDiary.setGeminiText(createDiary.getGeminiText());
+        nowDiary.setGeminiQuote(createDiary.getGeminiQuote());
 
         Long AreaId = areaRepository.getAreaByName(createDiary.getCityName()).getId();
 
@@ -68,15 +71,17 @@ public class DiaryService {
         logger.info("end to create diary");
     }
 
-    public List<Diary> readDiary(LocalDate date) {
+    public List<Diary> readDiary(Long memberId, LocalDate date) {
         logger.debug("read diary");
-        return diaryRepository.findAllByDate(date);
+        return diaryRepository.findAllByMemberIdAndDate(memberId, date);
     }
 
     public void updateDiary(LocalDate date, UpdateDiary updateDiary) {
         Diary nowDiary = diaryRepository.findDiaryById(updateDiary.getDiaryId());
         nowDiary.setText(updateDiary.getText());
         nowDiary.setUpdatedAt(LocalDateTime.now());
+        nowDiary.setGeminiText(updateDiary.getGeminiText());
+        nowDiary.setGeminiQuote(updateDiary.getGeminiQuote());
         diaryRepository.save(nowDiary);
     }
 

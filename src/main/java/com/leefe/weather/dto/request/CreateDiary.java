@@ -17,4 +17,6 @@ public class CreateDiary {
 
     private String cityName;
     private String text;
+    private String geminiText;
+    private String geminiQuote;
 }

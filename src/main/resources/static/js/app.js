@@ -18,6 +18,10 @@ const diaryAreaSearchInput = document.getElementById("diaryAreaSearch");
 const diaryAreaResults = document.getElementById("diaryAreaResults");
 const diaryAreaSelected = document.getElementById("diaryAreaSelected");
 const btnDiaryAreaSearch = document.getElementById("btnDiaryAreaSearch");
+const btnGeminiComfort = document.getElementById("btnGeminiComfort");
+const diaryComfort = document.getElementById("diaryComfort");
+const diaryComfortText = document.getElementById("diaryComfortText");
+const diaryComfortQuote = document.getElementById("diaryComfortQuote");
 const headerSubtitle = document.getElementById("headerSubtitle");
 
 const headerUser = document.getElementById("headerUser");
@@ -44,6 +48,8 @@ let diaryDatesInMonth = new Set();
 let areaByIdCache = new Map();
 let profilePendingArea = null;
 let currentMember = null;
+let pendingGeminiText = null;
+let pendingGeminiQuote = null;
 
 function getTodayString() {
     return formatDate(new Date());
@@ -629,22 +635,38 @@ async function fetchDiaryByDate(date) {
     return fetchDiaries(date, date);
 }
 
-async function createDiary(date, cityName, text) {
+async function createDiary(date, cityName, text, geminiText, geminiQuote) {
     const params = new URLSearchParams({ date });
+    const body = { cityName, text };
+    if (geminiText) {
+        body.geminiText = geminiText;
+    }
+    if (geminiQuote) {
+        body.geminiQuote = geminiQuote;
+    }
+
     const response = await authFetch(`/create/diary?${params}`, {
         method: "POST",
-        body: JSON.stringify({ cityName, text }),
+        body: JSON.stringify(body),
     });
     if (!response.ok) {
         throw new Error("일기를 저장하지 못했습니다.");
     }
 }
 
-async function updateDiary2(date, diaryId, text) {
+async function updateDiary2(date, diaryId, text, geminiText, geminiQuote) {
     const params = new URLSearchParams({ date });
+    const body = { diaryId, text };
+    if (geminiText) {
+        body.geminiText = geminiText;
+    }
+    if (geminiQuote) {
+        body.geminiQuote = geminiQuote;
+    }
+
     const response = await authFetch(`/update/diary2?${params}`, {
         method: "PUT",
-        body: JSON.stringify({ diaryId, text }),
+        body: JSON.stringify(body),
     });
     if (!response.ok) {
         throw new Error("일기를 수정하지 못했습니다.");
@@ -656,6 +678,74 @@ async function deleteDiary(date) {
     const response = await authFetch(`/delete/diary?${params}`, { method: "DELETE" });
     if (!response.ok) {
         throw new Error("일기를 삭제하지 못했습니다.");
+    }
+}
+
+function resetDiaryComfort() {
+    diaryComfort.classList.add("hidden");
+    diaryComfortText.textContent = "";
+    diaryComfortQuote.textContent = "";
+    pendingGeminiText = null;
+    pendingGeminiQuote = null;
+}
+
+function renderDiaryComfort(result) {
+    pendingGeminiText = result.text || null;
+    pendingGeminiQuote = result.lang || null;
+    diaryComfortText.textContent = pendingGeminiText || "";
+    diaryComfortQuote.textContent = pendingGeminiQuote || "";
+    diaryComfort.classList.toggle("hidden", !pendingGeminiText && !pendingGeminiQuote);
+}
+
+function renderSavedDiaryComfort(geminiText, geminiQuote) {
+    renderDiaryComfort({ text: geminiText || "", lang: geminiQuote || "" });
+}
+
+function buildDiaryComfortHtml(geminiText, geminiQuote) {
+    if (!geminiText && !geminiQuote) {
+        return "";
+    }
+
+    return `
+        <div class="diary-card-comfort">
+            ${geminiText ? `<p class="diary-card-comfort-text">${escapeHtml(geminiText)}</p>` : ""}
+            ${geminiQuote ? `<blockquote class="diary-card-comfort-quote">${escapeHtml(geminiQuote)}</blockquote>` : ""}
+        </div>
+    `;
+}
+
+async function fetchGeminiComfort(text) {
+    const response = await authFetch("/gemini/diary", {
+        method: "POST",
+        body: JSON.stringify(text),
+    });
+
+    if (!response.ok) {
+        throw new Error("위로 한마디를 불러오지 못했습니다.");
+    }
+
+    return response.json();
+}
+
+async function loadGeminiComfort() {
+    const text = diaryTextInput.value.trim();
+    if (!text) {
+        alert("일기 내용을 먼저 작성해 주세요.");
+        return;
+    }
+
+    btnGeminiComfort.disabled = true;
+    btnGeminiComfort.textContent = "불러오는 중…";
+    resetDiaryComfort();
+
+    try {
+        const result = await fetchGeminiComfort(text);
+        renderDiaryComfort(result);
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btnGeminiComfort.disabled = false;
+        btnGeminiComfort.textContent = "위로 한마디 받기";
     }
 }
 
@@ -696,6 +786,7 @@ function renderDiaries(diaries) {
                 </div>
             </div>
             <p class="diary-text">${escapeHtml(diaryText)}</p>
+            ${buildDiaryComfortHtml(diary.geminiText, diary.geminiQuote)}
         `;
 
         card.addEventListener("click", () => openEditModal(diary.date));
@@ -774,6 +865,12 @@ async function loadDiaryForSelectedDate() {
                     saveSelectedAreaLocally(area);
                 }
             }
+
+            if (diary.geminiText || diary.geminiQuote) {
+                renderSavedDiaryComfort(diary.geminiText, diary.geminiQuote);
+            } else {
+                resetDiaryComfort();
+            }
         } else {
             editingDate = null;
             editingDiaryId = null;
@@ -793,6 +890,7 @@ async function openModal(date) {
     diaryDateInput.value = date || getTodayString();
     diaryAreaSearchInput.value = "";
     resetDiaryAreaSearch();
+    resetDiaryComfort();
     renderDiarySelectedArea();
     updateFormNote();
     diaryModal.showModal();
@@ -841,14 +939,26 @@ diaryForm.addEventListener("submit", async (event) => {
 
     try {
         if (editingDate && editingDiaryId) {
-            await updateDiary2(editingDate, editingDiaryId, text);
+            await updateDiary2(
+                editingDate,
+                editingDiaryId,
+                text,
+                pendingGeminiText,
+                pendingGeminiQuote,
+            );
         } else {
             const area = getSelectedArea();
             if (!area) {
                 alert("지역을 선택해 주세요.");
                 return;
             }
-            await createDiary(date, area.name, text);
+            await createDiary(
+                date,
+                area.name,
+                text,
+                pendingGeminiText,
+                pendingGeminiQuote,
+            );
         }
         closeModal();
         await loadDiaries();
@@ -882,6 +992,8 @@ startDateInput.addEventListener("change", () => clampToToday(startDateInput));
 endDateInput.addEventListener("change", () => clampToToday(endDateInput));
 
 btnLogout.addEventListener("click", logout);
+
+btnGeminiComfort.addEventListener("click", loadGeminiComfort);
 
 initDiaryAreaSearch();
 initProfileModal();

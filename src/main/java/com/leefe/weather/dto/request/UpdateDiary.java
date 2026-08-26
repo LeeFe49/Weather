@@ -11,4 +11,6 @@ public class UpdateDiary {
 
     Long diaryId;
     String text;
+    String geminiText;
+    String geminiQuote;
 }

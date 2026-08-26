@@ -3,8 +3,11 @@ package com.leefe.weather.controller;
 import com.leefe.weather.domain.Diary;
 import com.leefe.weather.domain.Member;
 import com.leefe.weather.dto.request.CreateDiary;
+import com.leefe.weather.dto.request.GeminiResponse;
 import com.leefe.weather.dto.request.UpdateDiary;
 import com.leefe.weather.service.DiaryService;
+import com.leefe.weather.service.GeminiService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -13,14 +16,18 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class DiaryController {
+
     private final DiaryService diaryService;
+    private final GeminiService geminiService;
 
-    public DiaryController(DiaryService diaryService) {
-        this.diaryService = diaryService;
-    }
+//    public DiaryController(DiaryService diaryService, GeminiService geminiService) {
+//        this.diaryService = diaryService;
+//        this.geminiService = geminiService;
+//    }
 
-    @PostMapping("/create/diary")  // 지역칼럼 추가하여 저장
+    @PostMapping("/create/diary")  // 지역칼럼 추가하여 저장, gemini 데이터 추가 저장
     void createDiary(@AuthenticationPrincipal Member member
             ,@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
             , @RequestBody CreateDiary createDiary) {
@@ -28,8 +35,9 @@ public class DiaryController {
     }
 
     @GetMapping("/read/diary")
-    List<Diary> readDiary(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return diaryService.readDiary(date);
+    List<Diary> readDiary(@AuthenticationPrincipal Member member
+                          ,@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return diaryService.readDiary(member.getId(), date);
     }
 
     @GetMapping("/read/diaries")
@@ -47,6 +55,12 @@ public class DiaryController {
     @DeleteMapping("/delete/diary")
     void deleteDiary(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         diaryService.deleteDiary(date);
+    }
+
+    @PostMapping("/gemini/diary")
+    GeminiResponse callGemini(@AuthenticationPrincipal Member member,
+                              @RequestBody String text) {
+        return geminiService.callGemini(member.getId(), text);
     }
 
 }

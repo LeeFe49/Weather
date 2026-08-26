@@ -108,6 +108,15 @@
                     <span class="label-text">일기</span>
                     <textarea id="diaryText" rows="6" placeholder="오늘 하루는 어땠나요?" required></textarea>
                 </label>
+                <div class="field diary-comfort-field">
+                    <button type="button" class="btn btn-secondary" id="btnGeminiComfort">위로 한마디 받기</button>
+                    <div class="diary-comfort hidden" id="diaryComfort" aria-live="polite">
+                        <p class="diary-comfort-label">위로 한마디</p>
+                        <p class="diary-comfort-text" id="diaryComfortText"></p>
+                        <p class="diary-comfort-label">오늘의 명언</p>
+                        <blockquote class="diary-comfort-quote" id="diaryComfortQuote"></blockquote>
+                    </div>
+                </div>
                 <p class="form-note" id="formNote">지역을 선택하면 해당 지역의 날씨가 함께 저장됩니다.</p>
             </div>
 

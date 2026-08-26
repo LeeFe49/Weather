@@ -38,6 +38,7 @@ out/
 logs
 
 history.city.list.json
+application-local.properties
 
 # Google OAuth credentials (never commit)
 client_secret*.json

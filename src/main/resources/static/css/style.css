@@ -555,6 +555,70 @@ textarea {
     color: var(--text-muted);
 }
 
+.diary-comfort-field {
+    gap: 0.65rem;
+}
+
+.diary-comfort {
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(135, 196, 240, 0.15));
+}
+
+.diary-comfort-label {
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: 0.02em;
+}
+
+.diary-comfort-label:not(:first-child) {
+    margin-top: 0.85rem;
+}
+
+.diary-comfort-text {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.diary-comfort-quote {
+    margin: 0;
+    padding-left: 0.75rem;
+    border-left: 3px solid rgba(37, 99, 235, 0.35);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.diary-card-comfort {
+    margin-top: 0.85rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--radius-sm);
+    background: rgba(37, 99, 235, 0.06);
+    border: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+.diary-card-comfort-text {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--text);
+}
+
+.diary-card-comfort-quote {
+    margin: 0.65rem 0 0;
+    padding-left: 0.65rem;
+    border-left: 2px solid rgba(37, 99, 235, 0.3);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
 .modal-footer {
     display: flex;
     align-items: center;
