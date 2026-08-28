@@ -76,3 +76,4 @@
 - Docker
 - Jenkins
 - 배포
+- DB서버 다운 오류 개선
