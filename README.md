@@ -64,6 +64,9 @@
 #### https://korea-potato.tistory.com/39#google_vignette
 #### https://newstroyblog.tistory.com/652
 
+####
+- 위로 한마디 : gemini-3.6-flash
+
 ####ERD
 <img width="600" height="482" alt="image" src="https://github.com/user-attachments/assets/0fe1c5bc-b312-4e49-a3fd-d6acb59c863b" />
 
@@ -71,7 +74,6 @@
 #### 추가기능 (예정)
 - 사용자 계정
 - 실시간 많이 듣는 노래 틀기
-- AI 제목 생성
 - AI 대화형 일기 -> 음성인식 : ai 응담, 요청 테이블 생성 : 멀티턴으로 응답 요청
 - Docker
 - Jenkins
