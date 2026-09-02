@@ -68,8 +68,6 @@
 - gemini-3.6-flash
 
 #### ERD
-<img width="600" height="482" alt="image" src="https://github.com/user-attachments/assets/0fe1c5bc-b312-4e49-a3fd-d6acb59c863b" />
-
 
 #### 추가기능 (예정)
 - 사용자 계정
