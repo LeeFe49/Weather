@@ -6,6 +6,11 @@
 ## 🖥️ 프로젝트 소개
 개인 일기와 포트폴리오를 관리하기 위해 개발하고 있습니다.
 
+## 📌 주요 기능
+- 회원가입/로그인
+- 일기작성
+- 지역 날씨 정보
+- 위로한마디 (명언)
   
 ## 🕰️ 개발 기간
 * 26.07.20일 ~~
@@ -38,24 +43,6 @@
 #### ./gradlew build -x test : 테스트없이 jar 빌드
 #### nohup java -jar {prj}.jar & : 백그라운드로 jar 실행
 
-  
-## 📌 주요 기능
-#### 메인
-- about
-
-#### 회원가입
-- 기본 가입
-- 소셜 회원 가입
-
-#### 로그인
-- Spring Security
-- 기본 로그인
-- 소셜 로그인
-서버셋팅 출처:
-#### https://vennycode.tistory.com/54
-#### https://korea-potato.tistory.com/39#google_vignette
-#### https://newstroyblog.tistory.com/652
-
 #### 위로 한마디
 - gemini-3.6-flash
 
@@ -69,3 +56,8 @@
 - Jenkins
 - 배포
 - DB서버 다운 오류 개선
+- 소셜 로그인
+서버셋팅 출처:
+#### https://vennycode.tistory.com/54
+#### https://korea-potato.tistory.com/39#google_vignette
+#### https://newstroyblog.tistory.com/652
