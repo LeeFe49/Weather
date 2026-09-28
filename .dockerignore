@@ -1,0 +1,16 @@
+.git
+.gitignore
+.gradle
+build
+out
+bin
+.idea
+.vscode
+logs
+*.md
+.env
+.env
+!.env
+docker-compose*.yml
+Dockerfile
+terminals

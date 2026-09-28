@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    container_name: weather-app
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
